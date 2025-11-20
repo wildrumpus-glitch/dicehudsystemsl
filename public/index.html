@@ -1,0 +1,65 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dice Roll History</title>
+  <style>
+    body { background:#1a1a1a; color:#fff; font-family:Arial; padding:20px; }
+    table { width:100%; border-collapse:collapse; margin-top:20px; }
+    th, td { padding:10px; border-bottom:1px solid #333; }
+    tr:nth-child(even) { background:#222; }
+    .crit { color:#3aff3a; font-weight:bold; }
+    .fail { color:#ff3a3a; font-weight:bold; }
+    input { padding:8px; width:300px; }
+  </style>
+</head>
+<body>
+  <h1>Dice Roll History</h1>
+  <input id="search" placeholder="Search account or character...">
+
+  <table id="table">
+    <thead>
+      <tr>
+        <th>Account</th>
+        <th>Character</th>
+        <th>Dice</th>
+        <th>Result</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+function load() {
+  fetch("/api/history").then(r=>r.json()).then(rows=>{
+    let tbody = document.querySelector("tbody");
+    tbody.innerHTML = "";
+    let filter = document.getElementById("search").value.toLowerCase();
+
+    rows.filter(r =>
+      r.account_name.toLowerCase().includes(filter) ||
+      r.character_name.toLowerCase().includes(filter)
+    ).forEach(r=>{
+      let cls = "";
+      if(r.die_type === "d20" && r.result == 20) cls="crit";
+      if(r.die_type === "d20" && r.result == 1) cls="fail";
+
+      tbody.innerHTML += `
+        <tr>
+          <td>${r.account_name}</td>
+          <td>${r.character_name}</td>
+          <td>${r.die_type}</td>
+          <td class="${cls}">${r.result}</td>
+          <td>${r.timestamp}</td>
+        </tr>`;
+    });
+  });
+}
+
+setInterval(load, 3000);
+document.getElementById("search").oninput = load;
+load();
+</script>
+</body>
+</html>
